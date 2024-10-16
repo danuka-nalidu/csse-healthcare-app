@@ -1,6 +1,6 @@
 import React from 'react'
 import {doctors} from './../../assets/data/doctors';
-import DoctorCard from './DocotrCard';
+import DoctorCard from './DoctorCard';
 
 const DoctorList = () => {
   return (
