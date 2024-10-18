@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import signupImg from "../assets/images/signup.gif";
 import avatar from "../assets/images/doctor-img01.png";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
+import uploadImageToCloudinary from "../utils/UploadCloudinary";
+import { BASE_URL } from "../config";
+import {toast} from 'react-toastify'
+import HashLoader from 'react-spinners/HashLoader'
 
 const Signup = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewURL, setPreviewURL] = useState("");
+  const [loading,setLoading]=useState(false);
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,19 +19,49 @@ const Signup = () => {
     photo: selectedFile,
     role: "patient",
   });
-
+  const navigate=useNavigate()
+  
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleFileInputChange = async (event) => {
     const file = event.target.files[0];
+    
+    const data=await uploadImageToCloudinary(file)
+
+    setPreviewURL(data.url)
+    setSelectedFile(data.url)
+    setFormData({...formData,photo:data.url})
 
     //cloufdinary is used to upload images
   };
 
   const submitHandler = async event => {
+     
       event.preventDefault();
+      setLoading(true)
+
+      try {
+        const res=await fetch(`${BASE_URL}/auth/register`,{
+          method:'post',
+          headers:{
+            'content-type':'application/json'
+          },
+          body:JSON.stringify(formData)
+        })
+
+        const {message}=await res.json()
+        if (!res.ok) {
+          throw new Error(message)          
+        }
+        setLoading(false)
+        toast.success(message)
+        navigate('/login')
+      } catch (err) {
+        toast.error(err.message)
+        setLoading(false)
+      }
   };
 
   return (
@@ -34,7 +70,7 @@ const Signup = () => {
         <div className="max-w-[1170px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Image Box */}
-            <div className="hidden lg:block bg-primaryColor rounded-l-lg">
+            <div className="hidden rounded-l-lg lg:block bg-primaryColor">
               <figure className="rounded-l-lg">
                 <img
                   src={signupImg}
@@ -45,7 +81,7 @@ const Signup = () => {
             </div>
 
             {/* Sign Up form */}
-            <div className="rounded-l-lg lg:pl-16 py-10">
+            <div className="py-10 rounded-l-lg lg:pl-16">
               <h3 className="text-headingColor text-[22px] leading-9 font-bold mb-10 ">
                 Create an <span className="text-primaryColor">account</span>
               </h3>
@@ -85,7 +121,7 @@ const Signup = () => {
                   />
                 </div>
 
-                <div className="mb-5 flex items-center justify-between">
+                <div className="flex items-center justify-between mb-5">
                   <label className="text-headingColor font-bold text-[16px] leading-7 ">
                     Are you a:
                     <select
@@ -114,13 +150,13 @@ const Signup = () => {
                   </label>
                 </div>
 
-                <div className="mb-5 flex items-center gap-3 ">
-                  <figure
+                <div className="flex items-center gap-3 mb-5 ">
+                  { selectedFile && <figure
                     className="w-[60px] h-[60px] rounded-full border-2 border-solid border-primaryColor
                   flex items-center justify-center "
                   >
-                    <img src={avatar} alt="" className="w-full rounded-full " />
-                  </figure>
+                    <img src={previewURL} alt="" className="w-full rounded-full " />
+                  </figure>}
 
                   <div className="relative w-[130px] h-[50px]">
                     <input
@@ -142,18 +178,19 @@ const Signup = () => {
 
                 <div className="mt-7">
                   <button
+                  disabled={loading && true}
                     type="submit"
                     className="w-full bg-primaryColor text-white text-[18px] leading-[30px] rounded-lg px-4 py-3"
                   >
-                    Sign Up
+                    { loading ? <HashLoader size={25} color="#fffff"/>:  'Sign Up'}
                   </button>
                 </div>
 
-                <p className="mt-5 text-textColor text-center">
+                <p className="mt-5 text-center text-textColor">
                   Already have an account?
                   <Link
                     to="/login "
-                    className="text-primaryColor font-medium ml-1"
+                    className="ml-1 font-medium text-primaryColor"
                   >
                     Login
                   </Link>

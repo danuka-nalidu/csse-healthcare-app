@@ -18,12 +18,12 @@ export const authenticate = async (req, res, next) => {
 
     try {
         
-        const token = authToken.split(' ')[1];
+        const token = authToken.split(" ")[1];
 
         //verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-        req.userID = decoded.id;
+        req.userId = decoded.id;
         req.role = decoded.role;
 
         next();  //must be called to move to next function
@@ -41,7 +41,7 @@ export const authenticate = async (req, res, next) => {
 };
 
 export const restrict = roles => async (req, res, next) => {
-    const userId = req.userID;
+    const userId = req.userId;
 
     let user;
 
